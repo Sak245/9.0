@@ -19,8 +19,12 @@ from langgraph.graph import END, StateGraph, START
 st.title("Document Routing System")
 
 # Initialize Cassandra connection
-ASTRA_DB_APPLICATION_TOKEN = st.secrets["ASTRA_DB_APPLICATION_TOKEN"]
-ASTRA_DB_ID = st.secrets["ASTRA_DB_ID"]
+try:
+    ASTRA_DB_APPLICATION_TOKEN = st.secrets["ASTRA_DB_APPLICATION_TOKEN"]
+    ASTRA_DB_ID = st.secrets["ASTRA_DB_ID"]
+except KeyError:
+    st.error("Astra DB credentials not found in secrets. Please set up your secrets properly.")
+    st.stop()
 
 import cassio
 cassio.init(token=ASTRA_DB_APPLICATION_TOKEN, database_id=ASTRA_DB_ID)
@@ -41,8 +45,13 @@ class RouteQuery(BaseModel):
         description="Route the question to wikipedia or vectorstore."
     )
 
-os.environ["GROQ_API_KEY"] = st.secrets["GROQ_API_KEY"]
-llm = ChatGroq(model_name="Gemma2-9b-It")
+try:
+    os.environ["GROQ_API_KEY"] = st.secrets["GROQ_API_KEY"]
+    llm = ChatGroq(model_name="Gemma2-9b-It")
+except KeyError:
+    st.error("GROQ API key not found in secrets. Please set up your secrets properly.")
+    st.stop()
+
 structured_llm_router = llm.with_structured_output(RouteQuery)
 
 system_prompt = (
