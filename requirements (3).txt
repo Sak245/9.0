@@ -1,0 +1,11 @@
+langchain
+langgraph
+cassio
+langchain-community
+tiktoken
+langchain-groq
+langchainhub
+chromadb
+langchain-huggingface
+wikipedia
+streamlit
