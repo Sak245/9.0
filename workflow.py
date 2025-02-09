@@ -19,12 +19,14 @@ import cassio
 # Streamlit app
 st.title("Document Routing System")
 
-# Ask user for credentials
-ASTRA_DB_APPLICATION_TOKEN = st.text_input("Enter your Astra DB Application Token:", type="password")
-ASTRA_DB_ID = st.text_input("Enter your Astra DB ID:")
-GROQ_API_KEY = st.text_input("Enter your Groq API Key:", type="password")
+# Sidebar for user credentials
+st.sidebar.header("Enter Your Credentials")
+ASTRA_DB_APPLICATION_TOKEN = st.sidebar.text_input("Astra DB Application Token", type="password")
+ASTRA_DB_ID = st.sidebar.text_input("Astra DB ID")
+GROQ_API_KEY = st.sidebar.text_input("Groq API Key", type="password")
 
-if st.button("Initialize"):
+# Main app functionality
+if ASTRA_DB_APPLICATION_TOKEN and ASTRA_DB_ID and GROQ_API_KEY:
     # Initialize Cassandra connection
     cassio.init(token=ASTRA_DB_APPLICATION_TOKEN, database_id=ASTRA_DB_ID)
 
@@ -101,25 +103,38 @@ if st.button("Initialize"):
     workflow.add_edge("wiki_search", END)
     app = workflow.compile()
 
-    st.success("System initialized successfully!")
-
     # Streamlit interface
+    st.header("Ask a Question")
     user_question = st.text_input("Enter your question:")
 
     if st.button("Submit"):
-        inputs = {
-            "question": user_question,
-            "generation": "",
-            "documents": []
-        }
-        
-        results = []
-        for output in app.stream(inputs):
-            for node_name, state_value in output.items():
-                results.append(f"Node: {node_name}")
-                if 'documents' in state_value and state_value['documents']:
-                    results.append(f"Content: {state_value['documents'][0].page_content}")
-        
-        st.write("Results:")
-        for result in results:
-            st.write(result)
+        if user_question:
+            inputs = {
+                "question": user_question,
+                "generation": "",
+                "documents": []
+            }
+            
+            results = []
+            for output in app.stream(inputs):
+                for node_name, state_value in output.items():
+                    results.append(f"Node: {node_name}")
+                    if 'documents' in state_value and state_value['documents']:
+                        results.append(f"Content: {state_value['documents'][0].page_content}")
+            
+            st.subheader("Results:")
+            for result in results:
+                st.write(result)
+        else:
+            st.warning("Please enter a question.")
+else:
+    st.warning("Please enter all required credentials in the sidebar to use the app.")
+
+# Additional app information
+st.sidebar.markdown("---")
+st.sidebar.subheader("About This App")
+st.sidebar.info(
+    "This Document Routing System uses LangChain and Astra DB to intelligently route "
+    "questions to either a vectorstore or Wikipedia based on the query content. "
+    "It demonstrates the use of LLMs for query routing and document retrieval."
+)
